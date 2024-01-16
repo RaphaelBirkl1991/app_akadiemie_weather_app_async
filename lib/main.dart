@@ -1,28 +1,40 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:http/http.dart';
 import 'package:weather_app_asynchronous/user_location.dart';
 
 void main() {
   runApp(const MainApp());
 }
 
-const String jsonString = """
- {
-     "latitude": 48.78,
-     "longitude": 9.18,
-     "current": {
-         "time": "2024-01-12T11:45",
-         "temperature_2m": -3.6,
-         "apparent_temperature": -7.0,
-         "is_day": 1,
-         "precipitation": 12.00
-     }
- }
- """;
+// const String jsonString = """
+//  {
+//      "latitude": 48.78,
+//      "longitude": 9.18,
+//      "current": {
+//          "time": "2024-01-12T11:45",
+//          "temperature_2m": -3.6,
+//          "apparent_temperature": -7.0,
+//          "is_day": 1,
+//          "precipitation": 12.00
+//      }
+//  }
+//  """;
+
+Future<String> jsonString = getDataFromApi();
+
+const String apiUri =
+    'https://api.open-meteo.com/v1/forecast?latitude=48.783333&longitude=9.183333&current=temperature_2m,apparent_temperature,is_day,precipitation&timezone=Europe%2FBerlin&forecast_days=1';
+
+Future<String> getDataFromApi() async {
+  final Response response = await get(Uri.parse(apiUri));
+  final String jsonString = response.body;
+  return jsonString;
+}
 
 Future<UserLocation> getUserLocation() async {
-  final Map<String, dynamic> jsonMap = jsonDecode(jsonString);
+  final Map<String, dynamic> jsonMap = jsonDecode(await jsonString);
   double longitude = jsonMap["longitude"];
   double latitude = jsonMap["latitude"];
   final jsonLocation = UserLocation(latitude, longitude);
@@ -32,7 +44,7 @@ Future<UserLocation> getUserLocation() async {
 Future<bool> isDayTime() async {
   bool isDayTime;
   int returnValue;
-  final Map<String, dynamic> jsonMap = jsonDecode(jsonString);
+  final Map<String, dynamic> jsonMap = jsonDecode(await jsonString);
   final Map<String, dynamic> currentData = jsonMap["current"];
   returnValue = currentData["is_day"];
   returnValue == 1 ? isDayTime = true : isDayTime = false;
@@ -41,7 +53,7 @@ Future<bool> isDayTime() async {
 
 Future<double> getApparentTemp() async {
   double apparentTemp;
-  final Map<String, dynamic> jsonMap = jsonDecode(jsonString);
+  final Map<String, dynamic> jsonMap = jsonDecode(await jsonString);
   final Map<String, dynamic> currentData = jsonMap["current"];
   apparentTemp = currentData["apparent_temperature"];
   return apparentTemp;
@@ -49,7 +61,7 @@ Future<double> getApparentTemp() async {
 
 Future<double> getTemp() async {
   double temp;
-  final Map<String, dynamic> jsonMap = jsonDecode(jsonString);
+  final Map<String, dynamic> jsonMap = jsonDecode(await jsonString);
   final Map<String, dynamic> currentData = jsonMap["current"];
   temp = currentData["temperature_2m"];
   return temp;
@@ -57,7 +69,7 @@ Future<double> getTemp() async {
 
 Future<double> getPrecipitation() async {
   double precipitation;
-  final Map<String, dynamic> jsonMap = jsonDecode(jsonString);
+  final Map<String, dynamic> jsonMap = jsonDecode(await jsonString);
   final Map<String, dynamic> currentData = jsonMap["current"];
   precipitation = currentData["precipitation"];
   return precipitation;
