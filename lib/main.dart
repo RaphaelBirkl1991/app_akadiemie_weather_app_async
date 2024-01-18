@@ -1,79 +1,59 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
-import 'package:http/http.dart';
-import 'package:weather_app_asynchronous/user_location.dart';
+import 'package:weather_app_asynchronous/weather_data.dart';
+import 'package:weather_app_asynchronous/weather_repo.dart';
 
-void main() {
+void main() async {
+  // WeatherData weatherData = WeatherData(
+  //     tempFelt: await getApparentTemp(),
+  //     temp: await getTemp(),
+  //     precipitation: await getPrecipitation(),
+  //     isDayTime: await isDayTime(),
+  //     location: await getUserLocation());
+
   runApp(const MainApp());
 }
 
-// const String jsonString = """
-//  {
-//      "latitude": 48.78,
-//      "longitude": 9.18,
-//      "current": {
-//          "time": "2024-01-12T11:45",
-//          "temperature_2m": -3.6,
-//          "apparent_temperature": -7.0,
-//          "is_day": 1,
-//          "precipitation": 12.00
-//      }
-//  }
-//  """;
+// Future<UserLocation> getUserLocation() async {
+//   final Map<String, dynamic> jsonMap = jsonDecode(await jsonString);
+//   double longitude = jsonMap["longitude"];
+//   double latitude = jsonMap["latitude"];
+//   final jsonLocation = UserLocation(latitude, longitude);
+//   return jsonLocation;
+// }
 
-Future<String> jsonString = getDataFromApi();
+// Future<bool> isDayTime() async {
+//   bool isDayTime;
+//   int returnValue;
+//   final Map<String, dynamic> jsonMap = jsonDecode(await jsonString);
+//   final Map<String, dynamic> currentData = jsonMap["current"];
+//   returnValue = currentData["is_day"];
+//   returnValue == 1 ? isDayTime = true : isDayTime = false;
+//   return isDayTime;
+// }
 
-const String apiUri =
-    'https://api.open-meteo.com/v1/forecast?latitude=48.783333&longitude=9.183333&current=temperature_2m,apparent_temperature,is_day,precipitation&timezone=Europe%2FBerlin&forecast_days=1';
+// Future<double> getApparentTemp() async {
+//   double apparentTemp;
+//   final Map<String, dynamic> jsonMap = jsonDecode(await jsonString);
+//   final Map<String, dynamic> currentData = jsonMap["current"];
+//   apparentTemp = currentData["apparent_temperature"];
+//   return apparentTemp;
+// }
 
-Future<String> getDataFromApi() async {
-  final Response response = await get(Uri.parse(apiUri));
-  final String jsonString = response.body;
-  return jsonString;
-}
+// Future<double> getTemp() async {
+//   double temp;
+//   final Map<String, dynamic> jsonMap = jsonDecode(await jsonString);
+//   final Map<String, dynamic> currentData = jsonMap["current"];
+//   temp = currentData["temperature_2m"];
+//   return temp;
+// }
 
-Future<UserLocation> getUserLocation() async {
-  final Map<String, dynamic> jsonMap = jsonDecode(await jsonString);
-  double longitude = jsonMap["longitude"];
-  double latitude = jsonMap["latitude"];
-  final jsonLocation = UserLocation(latitude, longitude);
-  return jsonLocation;
-}
-
-Future<bool> isDayTime() async {
-  bool isDayTime;
-  int returnValue;
-  final Map<String, dynamic> jsonMap = jsonDecode(await jsonString);
-  final Map<String, dynamic> currentData = jsonMap["current"];
-  returnValue = currentData["is_day"];
-  returnValue == 1 ? isDayTime = true : isDayTime = false;
-  return isDayTime;
-}
-
-Future<double> getApparentTemp() async {
-  double apparentTemp;
-  final Map<String, dynamic> jsonMap = jsonDecode(await jsonString);
-  final Map<String, dynamic> currentData = jsonMap["current"];
-  apparentTemp = currentData["apparent_temperature"];
-  return apparentTemp;
-}
-
-Future<double> getTemp() async {
-  double temp;
-  final Map<String, dynamic> jsonMap = jsonDecode(await jsonString);
-  final Map<String, dynamic> currentData = jsonMap["current"];
-  temp = currentData["temperature_2m"];
-  return temp;
-}
-
-Future<double> getPrecipitation() async {
-  double precipitation;
-  final Map<String, dynamic> jsonMap = jsonDecode(await jsonString);
-  final Map<String, dynamic> currentData = jsonMap["current"];
-  precipitation = currentData["precipitation"];
-  return precipitation;
-}
+// Future<double> getPrecipitation() async {
+//   double precipitation;
+//   final Map<String, dynamic> jsonMap = jsonDecode(await jsonString);
+//   final Map<String, dynamic> currentData = jsonMap["current"];
+//   precipitation = currentData["precipitation"];
+//   return precipitation;
+// }
 
 class MainApp extends StatefulWidget {
   const MainApp({super.key});
@@ -83,11 +63,14 @@ class MainApp extends StatefulWidget {
 }
 
 class _MainAppState extends State<MainApp> {
-  double tempFelt = 0;
-  double tempReal = 0;
-  double precipitation = 0;
-  bool isdaytime = true;
-  UserLocation location = UserLocation(0, 0);
+  // double tempFelt = 0;
+  // double tempReal = 0;
+  // double precipitation = 0;
+  // bool isdaytime = true;
+  // UserLocation location = UserLocation(0, 0);
+
+  WeatherRepository repository = WeatherRepository();
+  WeatherData? weatherData;
 
   @override
   Widget build(BuildContext context) {
@@ -112,24 +95,41 @@ class _MainAppState extends State<MainApp> {
                     color: Colors.blue),
               ),
               const Spacer(),
-              Text("Gefühlte Temperatur: $tempFelt°"),
+              //    Text("Gefühlte Temperatur: $tempFelt°"),
+              Text(weatherData == null
+                  ? "loading..."
+                  : "Gefühlte Temp ${weatherData?.tempFelt.toString()}" ?? ""),
               const Spacer(),
-              Text("Temperatur: $tempReal°"),
+              //  Text("Temperatur: $tempReal°"),
+              Text(weatherData == null
+                  ? "loading..."
+                  : "Temperatur ${weatherData?.temp.toString()}" ?? ""),
               const Spacer(),
-              Text("Niederschlag: $precipitation mm"),
+              //   Text("Niederschlag: $precipitation mm"),
+              Text(weatherData == null
+                  ? "loading..."
+                  : "Niederschlag ${weatherData?.precipitation.toString()}" ??
+                      ""),
               const Spacer(),
-              Text("Tageszeit: $isdaytime"),
+              //   Text("Tageszeit: $isdaytime"),
+              Text(weatherData == null
+                  ? "loading..."
+                  : "Tag/Nacht ${weatherData?.isDayTime.toString()}" ?? ""),
               const Spacer(),
-              Text(
-                  "Standort: lat: ${location.latitude} long: ${location.longitude}"),
+              //  Text("Standort: lat: ${location.latitude} long: ${location.longitude}"),
+              Text(weatherData == null
+                  ? "loading..."
+                  : "lat: ${weatherData?.latitude.toString()} long: ${weatherData?.longitude.toString()}" ??
+                      ""),
               const Spacer(),
               OutlinedButton(
                   onPressed: () async {
-                    location = await getUserLocation();
-                    isdaytime = await isDayTime();
-                    tempFelt = await getApparentTemp();
-                    tempReal = await getTemp();
-                    precipitation = await getPrecipitation();
+                    // location = await getUserLocation();
+                    // isdaytime = await isDayTime();
+                    // tempFelt = await getApparentTemp();
+                    // tempReal = await getTemp();
+                    // precipitation = await getPrecipitation();
+                    weatherData = await repository.getWeatherData();
 
                     setState(() {});
                   },
